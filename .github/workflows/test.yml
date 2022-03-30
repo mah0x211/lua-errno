@@ -51,17 +51,15 @@ jobs:
       name: Setup Luarocks
       uses: leafo/gh-actions-luarocks@v4
     -
+      name: Install
+      run: |
+        luarocks make ERRNO_COVERAGE=1
+    -
       name: Install Tools
       run: |
         sudo apt install lcov -y
         luarocks install assert
-        luarocks install exec
         luarocks install luacov
-        luarocks install stringex
-    -
-      name: Install
-      run: |
-        luarocks make ERRNO_COVERAGE=1
     -
       name: Run Test
       run: |

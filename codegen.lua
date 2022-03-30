@@ -1,11 +1,10 @@
 local concat = table.concat
 local sort = table.sort
 local format = string.format
+local match = string.match
 local gsub = string.gsub
-local execute = os.execute
-local exec = require('exec').execvp
-local split = require('stringex').split
-local trim_space = require('stringex').trim_space
+local open = io.open
+local popen = io.popen
 
 -- get compiler
 local CC
@@ -13,17 +12,12 @@ for _, v in ipairs({
     'gcc',
     'clang',
 }) do
-    local cmd = assert(exec('which', {
-        v,
-    }))
-    cmd:waitpid()
-    local out = cmd.stdout:read('*a')
-    local err = cmd.stderr:read('*a')
-    if #err > 0 then
-        print(format('%q not found: ', v, err))
-    elseif #out > 0 then
-        CC = trim_space(out)
-        print(format('found %q', CC))
+    local cmd = assert(popen('which ' .. v))
+    local out = cmd:read('*a')
+
+    out = match(out, '^%s*([^%s]+)%s*$')
+    if #out > 0 then
+        CC = out
         break
     end
 end
@@ -50,7 +44,7 @@ int main(void){
     ]=]
 
     local list = {}
-    local f = assert(io.open('var/errno.txt'))
+    local f = assert(open('var/errno.txt'))
 
     for line in f:lines() do
         local name = line:match('^[_%w]+$')
@@ -66,37 +60,35 @@ int main(void){
     f:close()
 
     local src = format(SRC, concat(list, '\n'))
-    f = assert(io.open('var/errno.c', 'w+'))
+    f = assert(open('var/errno.c', 'w+'))
     assert(f:write(src))
     f:close()
 end
 
 -- compile src file
 do
-    local cmd = assert(exec(CC, {
+    local cmd = assert(popen(concat({
+        CC,
         'var/errno.c',
         '-o',
         'var/errno.out',
-    }))
-    cmd:waitpid()
-    local err = cmd.stderr:read('*a')
+        '2>&1',
+    }, ' ')))
+    local err = cmd:read('*a')
     assert(#err == 0, err)
 end
 
 -- extract errno
 local errno = {}
 do
-    local cmd = assert(exec('var/errno.out'))
-    cmd:waitpid()
-    local err = cmd.stderr:read('*a')
-    assert(#err == 0, err)
+    local cmd = assert(popen('var/errno.out'))
 
-    for line in cmd.stdout:lines() do
-        local arr = split(line, '=', true, 3)
+    for line in cmd:lines() do
+        local name, num, msg = match(line, '^([^=]+)=([^=]+)=(.+)$')
         errno[#errno + 1] = {
-            name = arr[1],
-            num = tonumber(arr[2]),
-            msg = arr[3],
+            name = name,
+            num = tonumber(num),
+            msg = msg,
         }
     end
     sort(errno, function(a, b)
@@ -106,7 +98,7 @@ end
 
 -- generate lua file
 do
-    local f = assert(io.open('tmpl/errno.lua'))
+    local f = assert(open('tmpl/errno.lua'))
     local tmpl = assert(f:read('*a'))
     local name = {}
     local code = {}
@@ -121,7 +113,7 @@ do
         ERRNO_CODE = concat(code, '\n'),
     })
 
-    f = assert(io.open('errno.lua', 'w+'))
+    f = assert(open('errno.lua', 'w+'))
     f:write(src)
     f:close()
 end
