@@ -1,0 +1,4 @@
+--
+-- errno.lua
+-- this file to be replaced by tmpl/errno.lua
+--
