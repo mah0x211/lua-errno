@@ -32,5 +32,5 @@ assert(err.errno == 2)
 print(err)
 
 -- get error object by number
-assert(noent == errno[2])
+assert(err == errno[2])
 ```
