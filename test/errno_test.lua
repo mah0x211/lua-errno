@@ -8,9 +8,9 @@ local function errno_test()
     for k, v in pairs(errno) do
         if type(k) == 'string' then
             assert.equal(v.name, k)
-            assert.equal(errno[v.errno], v)
+            assert.equal(errno[v.code].message, v.message)
         elseif type(k) == 'number' then
-            assert.equal(v.errno, k)
+            assert.equal(v.code, k)
             assert.equal(errno[v.name], v)
         end
     end
@@ -25,7 +25,7 @@ end
 local function strerror_test()
     -- test that strerror returns the error string
     for _, err in pairs(errno) do
-        assert.equal(strerror(err.errno), err.message)
+        assert.equal(strerror(err.code), err.message)
     end
 end
 

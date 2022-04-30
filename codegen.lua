@@ -103,8 +103,8 @@ do
     local name = {}
     local code = {}
     for _, v in ipairs(errno) do
-        name[#name + 1] = format('_M.%s = new(%q, %s, %q)', v.name, v.name,
-                                 v.num, v.msg)
+        name[#name + 1] = format('_M.%s = new_error_type(%q, %d, %q)', v.name,
+                                 v.name, v.num, v.msg)
         code[#code + 1] = format('_M[%d] = _M.%s -- %q', v.num, v.name, v.msg)
     end
 
