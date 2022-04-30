@@ -21,29 +21,7 @@
 --
 local get_errno = require('errno.get')
 local set_errno = require('errno.set')
-local setmetatable = setmetatable
-
---- tostring
---- @return string
-local function tostring(self)
-    return self.message
-end
-
---- new
---- @param name string
---- @param errno integer
---- @param message string
-local function new(name, errno, message)
-    return setmetatable({}, {
-        __metatable = 0,
-        __tostring = tostring,
-        __index = {
-            name = name,
-            errno = errno,
-            message = message,
-        },
-    })
-end
+local new_error_type = require('error').type.new
 
 local _M = {}
 -- declare the error name
