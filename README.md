@@ -25,11 +25,10 @@ assert(errno() == 2)
 
 -- get error object by name
 local err = errno.ENOENT
--- error object contains the 'name', 'errno' and 'message' fields
+-- error object contains the 'name', 'code' and 'message' fields
 assert(err.name == 'ENOENT')
-assert(err.errno == 2)
--- __tostring metamethod returns the value of err.message field
-print(err)
+assert(err.code == 2)
+print(err.message)
 
 -- get error object by number
 assert(err == errno[2])
