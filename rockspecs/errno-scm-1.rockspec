@@ -27,5 +27,7 @@ build = {
         LIB_EXTENSION   = "$(LIB_EXTENSION)",
         INST_LIBDIR     = "$(LIBDIR)/errno/",
         INST_LUADIR     = "$(LUADIR)",
+        CONFDIR         = '$(CONFDIR)',
+        LUA_INCDIR      = '$(LUA_INCDIR)',
     }
 }

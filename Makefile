@@ -22,5 +22,8 @@ install: $(SOBJ)
 	$(INSTALL) -d $(INST_LIBDIR)
 	$(INSTALL) $(SOBJ) $(INST_LIBDIR)
 	$(INSTALL) errno.lua $(INST_LUADIR)
+	$(INSTALL) src/lua_errno.h $(CONFDIR)
+	rm -f $(LUA_INCDIR)/lua_errno.h
+	ln -s $(CONFDIR)/lua_errno.h $(LUA_INCDIR)
 	rm -f ./src/*.o
 	rm -f ./src/*.so
