@@ -56,7 +56,7 @@ require('errno')
 ```
 
 
-### void lua_errno_pusherror( lua_State *L, int errnum, const char *msg, const char *op )
+### void lua_errno_pusherror_ex( lua_State *L, int errnum, const char *op, const char *msg )
 
 create new error from type of `errno[errnum]`.
 
@@ -65,13 +65,18 @@ it is equivalent to the following code:
 ```lua
 local error = require('error')
 
-local function errno_pusherror( errnum, msg, op )
+local function errno_pusherror( errnum, op, msg )
     local errno = require('errno')
     local errt = errno[errnum]
     if not errt then
         error(format('errno[%d] is not type of error.type: %s', type(errno[errnum]))
     end
-    local msg = error.message.new( msg, op, errnum )
+    local msg = error.message.new( msg or errt.message, op, errnum )
     return errt:new(msg)
 end
 ```
+
+### lua_errno_pusherror( lua_State *L, int errnum, const char *op )
+
+helper macro equivalent to `lua_errno_pusherror_ex(L, errnum, op, NULL)`.
+
