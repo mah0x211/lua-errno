@@ -19,9 +19,10 @@
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 -- THE SOFTWARE.
 --
-local get_errno = require('errno.get')
-local set_errno = require('errno.set')
+local format= string.format
+local tostring = tostring
 local new_error_type = require('error').type.new
+local new_error_mesage = require('error').message.new
 
 local _M = {}
 -- declare the error name
@@ -29,19 +30,26 @@ ${ERRNO_NAME}
 -- map errno to errname
 ${ERRNO_CODE}
 
---- call
---- @param _ table
---- @param v integer
---- @return integer
-local function call(_, v)
-    local errno = get_errno()
-    if v ~= nil then
-        set_errno(v)
+--- new
+---@param num integer
+---@param msg any
+---@param op string
+---@param err error
+---@param traceback boolean
+---@return error
+local function new(num, msg, op, err, traceback)
+    local t = _M[num]
+    if not t then
+        error(format('%q is not defined', tostring(num)), 2)
+    elseif op then
+        msg = new_error_mesage(msg, op, t.code)
     end
-    return errno
+    return t:new(msg, err, 2, traceback)
 end
 
-return setmetatable( _M, {
-    __call = call
+return setmetatable(_M, {
+    __index = {
+        new = new
+    }
 })
 
