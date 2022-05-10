@@ -22,19 +22,32 @@ this module install the `lua_errno.h` to `CONFDIR` and creates a symbolic link i
 local errno = require('errno')
 
 -- set errno
-errno(2)
+print(errno(5))
 -- get last errno
-assert(errno() == 2)
+print(errno()) -- 5
 
--- get error object by name
-local err = errno.ENOENT
--- error object contains the 'name', 'code' and 'message' fields
-assert(err.name == 'ENOENT')
-assert(err.code == 2)
-print(err.message)
+-- get error.type object
+-- by errno
+print(errno[2]) -- ENOENT: 0x7f7fd540e898
+-- by name
+print(errno.ENOENT) -- ENOENT: 0x7f7fd540e898
 
--- get error object by number
-assert(err == errno[2])
+-- create an error object from errno
+local err = errno.new('EINTR')
+print(err)
+-- ./example.lua:15: in main chunk: [EINTR][code:4] Interrupted system call
+
+-- create an error object with arguments
+local msg = 'hello'
+local op = 'my-op'
+local traceback = true
+local last_err = errno.new('ENOENT', msg, op, err, traceback)
+print(last_err)
+-- ./example.lua:23: in main chunk: [ENOENT][code:2] No such file or directory (hello)
+-- stack traceback:
+-- 	./example.lua:23: in main chunk
+-- 	[C]: in ?
+-- ./example.lua:15: in main chunk: [EINTR][code:4] Interrupted system call
 ```
 
 
@@ -56,27 +69,30 @@ require('errno')
 ```
 
 
-### void lua_errno_pusherror_ex( lua_State *L, int errnum, const char *op, const char *msg )
+### void lua_errno_pusherror( lua_State *L, int errnumidx )
 
 create new error from type of `errno[errnum]`.
 
 it is equivalent to the following code:
 
 ```lua
-local error = require('error')
-
-local function errno_pusherror( errnum, op, msg )
-    local errno = require('errno')
-    local errt = errno[errnum]
-    if not errt then
-        error(format('errno[%d] is not type of error.type: %s', type(errno[errnum]))
-    end
-    local msg = error.message.new( msg or errt.message, op, errnum )
-    return errt:new(msg)
+local function errno_pusherror(errnum, op, msg, err, traceback)
+    return require('errno').new(errnum, op, msg, err, traceback)
 end
 ```
 
-### lua_errno_pusherror( lua_State *L, int errnum, const char *op )
+### Helper Macros
 
-helper macro equivalent to `lua_errno_pusherror_ex(L, errnum, op, NULL)`.
+**void lua_errno_pusherrno( lua_State \*L, int errnum )**  
 
+```c
+lua_pushinteger(L, errnum);
+lua_errno_pusherror(L, lua_gettop(L));
+```
+
+**void lua_errno_pusherrname( lua_State \*L, const char \*errname )**   
+
+```c
+lua_pushstring(L, errname);
+lua_errno_pusherror(L, lua_gettop(L));
+```

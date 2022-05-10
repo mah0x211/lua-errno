@@ -43,42 +43,28 @@ static inline void lua_errno_loadlib(lua_State *L)
     lua_settop(L, top);
 }
 
-static inline void lua_errno_pusherror_ex(lua_State *L, int errnum,
-                                          const char *op, const char *msg)
+static inline void lua_errno_pusherror(lua_State *L, int errnumidx)
 {
-    int top            = lua_gettop(L);
-    le_error_type_t *t = NULL;
-
+    // get errno.new function
     lua_errno_pushlib(L);
-    // get errno[errnum]
-    lua_rawgeti(L, -1, errnum);
-    if (!lauxh_ismetatableof(L, -1, LE_ERROR_TYPE_MT)) {
-        lua_pushfstring(L, "errno[%d] is not type of " LE_ERROR_TYPE_MT ": %s",
-                        errnum, luaL_typename(L, -1));
-        lua_error(L);
-    }
-    t = (le_error_type_t *)lua_touserdata(L, -1);
-    lua_replace(L, top + 1);
+    lua_getfield(L, -1, "new");
+    lua_insert(L, errnumidx);
+    lua_pop(L, 1);
+    // call errno.new(errnum|errname, msg, op, err, traceback)
+    lua_call(L, lua_gettop(L) - errnumidx, 1);
+}
+#undef lua_errno_pushlib
 
-    // create error message { message = msg, op = op, code = errnum }
-    if (msg) {
-        lua_pushstring(L, msg);
-    } else {
-        lauxh_pushref(L, t->ref_msg);
-    }
-    if (op) {
-        lua_pushstring(L, op);
-    } else {
-        lua_pushnil(L);
-    }
+static inline void lua_errno_pusherrno(lua_State *L, int errnum)
+{
     lua_pushinteger(L, errnum);
-    le_new_message(L, top + 2);
-    le_new_typed_error(L, top + 1);
+    lua_errno_pusherror(L, lua_gettop(L));
 }
 
-#define lua_errno_pusherror(L, errnum, op)                                     \
- lua_errno_pusherror_ex(L, errnum, op, NULL)
-
-#undef lua_errno_pushlib
+static inline void lua_errno_pusherrname(lua_State *L, const char *errname)
+{
+    lua_pushstring(L, errname);
+    lua_errno_pusherror(L, lua_gettop(L));
+}
 
 #endif
