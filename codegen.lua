@@ -133,6 +133,11 @@ for _, target in ipairs({
         strerror = 'strerror',
         filename = 'errno.lua',
     },
+    {
+        errlist = 'var/eai.txt',
+        strerror = 'gai_strerror',
+        filename = 'lib/eai.lua',
+    },
 }) do
     compile(target.errlist, target.strerror)
     for k, v in pairs(extract()) do

@@ -3,4 +3,5 @@ runreport = true
 deletestats = false
 modules = {
     errno = 'errno.lua',
+    ['errno.eai'] = 'lib/eai.lua',
 }
