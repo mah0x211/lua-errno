@@ -63,7 +63,7 @@ jobs:
     -
       name: Run Test
       run: |
-        lua ./test/errno_test.lua
+        lua ./test/testall.lua
     -
       name: Generate coverage reports
       run: |

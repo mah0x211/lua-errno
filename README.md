@@ -60,39 +60,29 @@ the following APIs are helper functions to use `errno` module in C module.
 
 ### void lua_errno_loadlib( lua_State *L )
 
-load the `lua-errno` module.  
+load the `errno` module.  
+**NOTE:** you must call this API at least once before using the following API.
 
 it is equivalent to the following code:
 
 ```lua
 require('errno')
+require('errno.eai')
 ```
 
 
-### void lua_errno_pusherror( lua_State *L, int errnumidx )
-
-create new error from type of `errno[errnum]`.
+### void lua_errno_new( lua_State *L, int errnum, const char *op )
 
 it is equivalent to the following code:
 
 ```lua
-local function errno_pusherror(errnum, op, msg, err, traceback)
-    return require('errno').new(errnum, op, msg, err, traceback)
-end
+return require('errno').new(errnum, nil, op)
 ```
 
-### Helper Macros
+### void lua_errno_eai_new( lua_State *L, int errnum, const char *op )
 
-**void lua_errno_pusherrno( lua_State \*L, int errnum )**  
+it is equivalent to the following code:
 
-```c
-lua_pushinteger(L, errnum);
-lua_errno_pusherror(L, lua_gettop(L));
-```
-
-**void lua_errno_pusherrname( lua_State \*L, const char \*errname )**   
-
-```c
-lua_pushstring(L, errname);
-lua_errno_pusherror(L, lua_gettop(L));
+```lua
+return require('errno.eai').new(errnum, nil, op)
 ```

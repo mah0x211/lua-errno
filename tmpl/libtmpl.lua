@@ -26,9 +26,9 @@ local new_error_mesage = require('error').message.new
 
 local _M = {}
 -- declare the error name
-${ERRNO_NAME}
+${BY_NAME}
 -- map errno to errname
-${ERRNO_CODE}
+${BY_CODE}
 
 --- new
 ---@param num integer
@@ -47,7 +47,12 @@ local function new(num, msg, op, err, traceback)
     return t:new(msg, err, 2, traceback)
 end
 
-return setmetatable(_M, {
+local EXPORTS = {}
+for k, v in pairs(_M) do
+    EXPORTS[k] = v
+end
+
+return setmetatable(EXPORTS, {
     __index = {
         new = new
     }
