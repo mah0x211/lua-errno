@@ -21,33 +21,23 @@ this module install the `lua_errno.h` to `CONFDIR` and creates a symbolic link i
 ```lua
 local errno = require('errno')
 
--- set errno
-print(errno(5))
--- get last errno
-print(errno()) -- 5
+-- create ENOENT error
+-- please refer:
+--  https://github.com/mah0x211/lua-error#err--errtnew-message--wrap--level--traceback-
+local err = errno.ENOENT:new('hello')
+print(err) -- ./example.lua:6: in main chunk: [ENOENT:2] No such file or directory (hello)
+print(err.type, errno.ENOENT) -- ENOENT: 0x7f8898c0dd88 ENOENT: 0x7f8898c0dd88
+print(err.code, errno.ENOENT.code) -- 2 2
+print(err.message) -- hello
+print(err.op) -- nil
 
--- get error.type object
--- by errno
-print(errno[2]) -- ENOENT: 0x7f7fd540e898
--- by name
-print(errno.ENOENT) -- ENOENT: 0x7f7fd540e898
-
--- create an error object from errno
-local err = errno.new('EINTR')
-print(err)
--- ./example.lua:15: in main chunk: [EINTR][code:4] Interrupted system call
-
--- create an error object with arguments
-local msg = 'hello'
-local op = 'my-op'
-local traceback = true
-local last_err = errno.new('ENOENT', msg, op, err, traceback)
-print(last_err)
--- ./example.lua:23: in main chunk: [ENOENT][code:2] No such file or directory (hello)
--- stack traceback:
--- 	./example.lua:23: in main chunk
--- 	[C]: in ?
--- ./example.lua:15: in main chunk: [EINTR][code:4] Interrupted system call
+-- create ENOENT error by new function
+err = errno.new('ENOENT', 'world', 'example')
+print(err) -- ./example.lua:14: in main chunk: [ENOENT:2][example] No such file or directory (world)
+print(err.type, errno.ENOENT) -- ENOENT: 0x7f8898c0dd88 ENOENT: 0x7f8898c0dd88
+print(err.code, errno.ENOENT.code) -- 2 2
+print(err.message) -- world
+print(err.op) -- example
 ```
 
 
