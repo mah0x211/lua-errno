@@ -57,12 +57,16 @@ static inline void lua_errno_loadlib(lua_State *L)
 }
 
 static inline void lua_errno_new_ex(lua_State *L, lua_errno_type_e type,
-                                    int errnum, const char *op, const char *msg)
+                                    int errnum, const char *op, const char *msg,
+                                    int erridx, int traceback)
 {
+    int top = lua_gettop(L);
+
     // load the module if not loaded yet
     if (LUA_ERRNO_REF[type] == LUA_NOREF) {
         luaL_error(L, "\"errno\" module is not loaded by lua_errno_loadlib()");
     }
+    luaL_checkstack(L, top + 6, NULL);
 
     // get errno.new function
     lauxh_pushref(L, LUA_ERRNO_REF[type]);
@@ -77,18 +81,26 @@ static inline void lua_errno_new_ex(lua_State *L, lua_errno_type_e type,
     } else {
         lua_pushnil(L);
     }
+    if (erridx < 0) {
+        lua_pushvalue(L, top + erridx + 1);
+    } else if (erridx > 0) {
+        lua_pushvalue(L, erridx);
+    } else {
+        lua_pushnil(L);
+    }
+    lua_pushboolean(L, traceback);
     // call errno.new(errnum, msg, op, err, traceback)
-    lua_call(L, 3, 1);
+    lua_call(L, 5, 1);
 }
 
 static inline void lua_errno_new(lua_State *L, int errnum, const char *op)
 {
-    lua_errno_new_ex(L, LUA_ERRNO_T_DEFAULT, errnum, op, NULL);
+    lua_errno_new_ex(L, LUA_ERRNO_T_DEFAULT, errnum, op, NULL, 0, 0);
 }
 
 static inline void lua_errno_eai_new(lua_State *L, int errnum, const char *op)
 {
-    lua_errno_new_ex(L, LUA_ERRNO_T_EAI, errnum, op, NULL);
+    lua_errno_new_ex(L, LUA_ERRNO_T_EAI, errnum, op, NULL, 0, 0);
 }
 
 #endif
