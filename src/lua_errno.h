@@ -26,13 +26,8 @@
 // lualib
 #include <lua_error.h>
 
-typedef enum {
-    LUA_ERRNO_T_DEFAULT = 0,
-    LUA_ERRNO_T_EAI,
-    _LUA_ERRNO_T_MAX
-} lua_errno_type_e;
-
-static int LUA_ERRNO_REF[_LUA_ERRNO_T_MAX] = {LUA_NOREF, LUA_NOREF};
+#define LUA_ERRNO_T_DEFAULT "errno.new"
+#define LUA_ERRNO_T_EAI     "errno.eai.new"
 
 static inline void lua_errno_loadlib(lua_State *L)
 {
@@ -40,14 +35,18 @@ static inline void lua_errno_loadlib(lua_State *L)
 
 #define getref(L, t, libname)                                                  \
  do {                                                                          \
-  if (LUA_ERRNO_REF[t] == LUA_NOREF) {                                         \
+  lua_pushstring((L), (t));                                                    \
+  lua_rawget((L), LUA_REGISTRYINDEX);                                          \
+  if (!lua_isfunction((L), -1)) {                                              \
+   lua_pop((L), 1);                                                            \
    luaL_loadstring((L), "return require(" #libname ")");                       \
    lua_call((L), 0, 1);                                                        \
-   lua_getfield((L), -1, "new");                                               \
-   luaL_checktype(L, -1, LUA_TFUNCTION);                                       \
-   LUA_ERRNO_REF[t] = lauxh_ref((L));                                          \
-   lua_settop((L), (top));                                                     \
+   lua_pushstring((L), (t));                                                   \
+   lua_getfield((L), -2, "new");                                               \
+   luaL_checktype((L), -1, LUA_TFUNCTION);                                     \
+   lua_rawset((L), LUA_REGISTRYINDEX);                                         \
   }                                                                            \
+  lua_settop((L), (top));                                                      \
  } while (0)
 
     getref(L, LUA_ERRNO_T_DEFAULT, "errno");
@@ -56,20 +55,21 @@ static inline void lua_errno_loadlib(lua_State *L)
 #undef getref
 }
 
-static inline void lua_errno_new_ex(lua_State *L, lua_errno_type_e type,
-                                    int errnum, const char *op, const char *msg,
-                                    int erridx, int traceback)
+static inline void lua_errno_new_ex(lua_State *L, const char *type, int errnum,
+                                    const char *op, const char *msg, int erridx,
+                                    int traceback)
 {
     int top = lua_gettop(L);
 
-    // load the module if not loaded yet
-    if (LUA_ERRNO_REF[type] == LUA_NOREF) {
-        luaL_error(L, "\"errno\" module is not loaded by lua_errno_loadlib()");
-    }
     luaL_checkstack(L, top + 6, NULL);
 
     // get errno.new function
-    lauxh_pushref(L, LUA_ERRNO_REF[type]);
+    lua_pushstring(L, type);
+    lua_rawget(L, LUA_REGISTRYINDEX);
+    if (!lua_isfunction(L, -1)) {
+        // load the module if not loaded yet
+        luaL_error(L, "\"errno\" module is not loaded by lua_errno_loadlib()");
+    }
     lua_pushinteger(L, errnum);
     if (msg) {
         lua_pushstring((L), (msg));
