@@ -69,6 +69,14 @@ it is equivalent to the following code:
 return require('errno').new(errnum, nil, op)
 ```
 
+### void lua_errno_new_with_message( lua_State *L, int errnum, const char *op, const char *msg )
+
+it is equivalent to the following code:
+
+```lua
+return require('errno').new(errnum, msg, op)
+```
+
 ### void lua_errno_eai_new( lua_State *L, int errnum, const char *op )
 
 it is equivalent to the following code:

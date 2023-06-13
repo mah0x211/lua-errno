@@ -34,20 +34,20 @@ static inline void lua_errno_loadlib(lua_State *L)
     int top = lua_gettop(L);
 
 #define getref(L, t, libname)                                                  \
- do {                                                                          \
-  lua_pushstring((L), (t));                                                    \
-  lua_rawget((L), LUA_REGISTRYINDEX);                                          \
-  if (!lua_isfunction((L), -1)) {                                              \
-   lua_pop((L), 1);                                                            \
-   luaL_loadstring((L), "return require(" #libname ")");                       \
-   lua_call((L), 0, 1);                                                        \
-   lua_pushstring((L), (t));                                                   \
-   lua_getfield((L), -2, "new");                                               \
-   luaL_checktype((L), -1, LUA_TFUNCTION);                                     \
-   lua_rawset((L), LUA_REGISTRYINDEX);                                         \
-  }                                                                            \
-  lua_settop((L), (top));                                                      \
- } while (0)
+    do {                                                                       \
+        lua_pushstring((L), (t));                                              \
+        lua_rawget((L), LUA_REGISTRYINDEX);                                    \
+        if (!lua_isfunction((L), -1)) {                                        \
+            lua_pop((L), 1);                                                   \
+            luaL_loadstring((L), "return require(" #libname ")");              \
+            lua_call((L), 0, 1);                                               \
+            lua_pushstring((L), (t));                                          \
+            lua_getfield((L), -2, "new");                                      \
+            luaL_checktype((L), -1, LUA_TFUNCTION);                            \
+            lua_rawset((L), LUA_REGISTRYINDEX);                                \
+        }                                                                      \
+        lua_settop((L), (top));                                                \
+    } while (0)
 
     getref(L, LUA_ERRNO_T_DEFAULT, "errno");
     getref(L, LUA_ERRNO_T_EAI, "errno.eai");
@@ -96,6 +96,12 @@ static inline void lua_errno_new_ex(lua_State *L, const char *type, int errnum,
 static inline void lua_errno_new(lua_State *L, int errnum, const char *op)
 {
     lua_errno_new_ex(L, LUA_ERRNO_T_DEFAULT, errnum, op, NULL, 0, 0);
+}
+
+static inline void lua_errno_new_with_message(lua_State *L, int errnum,
+                                              const char *op, const char *msg)
+{
+    lua_errno_new_ex(L, LUA_ERRNO_T_DEFAULT, errnum, op, msg, 0, 0);
 }
 
 static inline void lua_errno_eai_new(lua_State *L, int errnum, const char *op)
