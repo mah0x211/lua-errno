@@ -1,5 +1,5 @@
 package = "errno"
-version = "0.4.0-1"
+version = "0.4.0-2"
 source = {
     url = "git+https://github.com/mah0x211/lua-errno.git",
     tag = "v0.4.0",
@@ -12,7 +12,7 @@ description = {
 }
 dependencies = {
     "lua >= 5.1",
-    "error >= 0.8.0",
+    "error >= 0.8.0, <= 0.12.0",
 }
 build = {
     type = 'make',
