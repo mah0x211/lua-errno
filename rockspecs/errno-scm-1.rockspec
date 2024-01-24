@@ -11,7 +11,7 @@ description = {
 }
 dependencies = {
     "lua >= 5.1",
-    "error >= 0.8.0, <= 0.12.0",
+    "error >= 0.13.0",
 }
 build = {
     type = 'make',
