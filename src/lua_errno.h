@@ -39,12 +39,9 @@ static inline void lua_errno_loadlib(lua_State *L)
         lua_rawget((L), LUA_REGISTRYINDEX);                                    \
         if (!lua_isfunction((L), -1)) {                                        \
             lua_pop((L), 1);                                                   \
-            luaL_loadstring((L), "return require(" #libname ")");              \
-            lua_call((L), 0, 1);                                               \
-            lua_pushstring((L), (t));                                          \
-            lua_getfield((L), -2, "new");                                      \
+            lua_error_dostring(L, "return require('errno').new", 0, 1);        \
             luaL_checktype((L), -1, LUA_TFUNCTION);                            \
-            lua_rawset((L), LUA_REGISTRYINDEX);                                \
+            lua_setfield((L), LUA_REGISTRYINDEX, (t));                         \
         }                                                                      \
         lua_settop((L), (top));                                                \
     } while (0)
@@ -93,20 +90,47 @@ static inline void lua_errno_new_ex(lua_State *L, const char *type, int errnum,
     lua_call(L, 5, 1);
 }
 
+/**
+ * create a new errno object that equivalent to the following Lua code:
+ *  errno.new(errnum, nil, op)
+ */
 static inline void lua_errno_new(lua_State *L, int errnum, const char *op)
 {
-    lua_errno_new_ex(L, LUA_ERRNO_T_DEFAULT, errnum, op, NULL, 0, 0);
+    int top = lua_gettop(L);
+
+    lua_pushinteger(L, errnum);
+    lua_pushnil(L);
+    lua_pushstring(L, op);
+    lua_error_dostring(L, "return require('errno').new(...)", top + 1, 1);
 }
 
+/**
+ * create a new errno object that equivalent to the following Lua code:
+ *  errno.new(errnum, msg, op)
+ */
 static inline void lua_errno_new_with_message(lua_State *L, int errnum,
                                               const char *op, const char *msg)
 {
-    lua_errno_new_ex(L, LUA_ERRNO_T_DEFAULT, errnum, op, msg, 0, 0);
+    int top = lua_gettop(L);
+
+    lua_pushinteger(L, errnum);
+    lua_pushstring(L, msg);
+    lua_pushstring(L, op);
+    lua_error_dostring(L, "return require('errno').new(...)", top + 1, 1);
 }
 
+/**
+ * create a new errno object that equivalent to the following Lua code:
+ *  errno.eai.new(errnum, nil, op)
+ */
 static inline void lua_errno_eai_new(lua_State *L, int errnum, const char *op)
 {
-    lua_errno_new_ex(L, LUA_ERRNO_T_EAI, errnum, op, NULL, 0, 0);
+    int top = lua_gettop(L);
+
+    lua_pushinteger(L, errnum);
+    lua_pushnil(L);
+    lua_pushstring(L, op);
+    lua_error_dostring(L, "return require('errno.eai').new(...)", top + 1, 1);
 }
 
 #endif
