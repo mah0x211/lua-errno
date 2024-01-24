@@ -118,10 +118,10 @@ end
 
 -- render lua file
 local function render_lua(filename, repl)
-    local f = assert(open('tmpl/libtmpl.lua'))
+    local f = assert(open(filename, "r+"))
     local tmpl = assert(f:read('*a'))
-    local src = gsub(tmpl, '%${([^}]+)}', repl)
-    f = assert(open(filename, 'w+'))
+    local src = gsub(tmpl, '[-]+%s*%${([^}]+)}', repl)
+    f:seek('set')
     f:write(src)
     f:close()
 end
