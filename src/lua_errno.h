@@ -39,7 +39,7 @@ static inline void lua_errno_loadlib(lua_State *L)
         lua_rawget((L), LUA_REGISTRYINDEX);                                    \
         if (!lua_isfunction((L), -1)) {                                        \
             lua_pop((L), 1);                                                   \
-            lua_error_dostring(L, "return require('errno').new", 0, 1);        \
+            lua_error_dostring(L, "return require('" libname "').new", 0, 1);  \
             luaL_checktype((L), -1, LUA_TFUNCTION);                            \
             lua_setfield((L), LUA_REGISTRYINDEX, (t));                         \
         }                                                                      \
@@ -60,12 +60,12 @@ static inline void lua_errno_new_ex(lua_State *L, const char *type, int errnum,
 
     luaL_checkstack(L, top + 6, NULL);
 
-    // get errno.new function
+    // get cached constructor function
     lua_pushstring(L, type);
     lua_rawget(L, LUA_REGISTRYINDEX);
     if (!lua_isfunction(L, -1)) {
-        // load the module if not loaded yet
-        luaL_error(L, "\"errno\" module is not loaded by lua_errno_loadlib()");
+        luaL_error(L,
+                   "constructor function is not loaded by lua_errno_loadlib()");
     }
     lua_pushinteger(L, errnum);
     if (msg) {
