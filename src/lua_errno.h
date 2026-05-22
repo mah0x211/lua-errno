@@ -24,6 +24,9 @@
 #define lua_errno_h
 
 // lualib
+#include <lauxlib.h>
+#include <lua.h>
+// lua_error
 #include <lua_error.h>
 
 #define LUA_ERRNO_T_DEFAULT "errno.new"
