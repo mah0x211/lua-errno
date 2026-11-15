@@ -1,5 +1,19 @@
+# Ignore all hidden files
+.*
+
+# Keep the .gitignore file itself
+!.gitignore
+
+# Keep the .github directory itself
+!.github
+
+# Ignore all files starting with an underscore
+_*
+
+# Ignore coverage and build files
 coverage/
 *.o
+*.so
 *.out
 *.profraw
 *.gcda

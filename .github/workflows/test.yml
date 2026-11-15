@@ -6,15 +6,44 @@ on:
       - '**.md'
       - 'LICENSE'
 
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+
+permissions:
+  contents: read
+
 jobs:
+  head-checks:
+    name: Check existing head CI
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      workflow_state: ${{ steps.head.outputs.workflow_state }}
+    steps:
+    -
+      name: Inspect existing push CI
+      if: github.event_name == 'pull_request'
+      id: head
+      uses: mah0x211/head-checks-status@v1
+
   luacheck:
+    needs: head-checks
+    if: >-
+      github.event_name == 'push' ||
+      !contains(
+        fromJSON('["success", "queued", "in_progress"]'),
+        needs.head-checks.outputs.workflow_state
+      )
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/mah0x211/lua-ci:latest
     steps:
     -
       name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
       with:
         submodules: 'true'
     -
@@ -27,6 +56,9 @@ jobs:
 
   test:
     needs: luacheck
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/mah0x211/lua-ci:latest
@@ -37,6 +69,7 @@ jobs:
           - "5.2.:latest"
           - "5.3.:latest"
           - "5.4.:latest"
+          - "5.5.:latest"
           - "lj-v2.1:latest"
     steps:
     -
@@ -46,7 +79,7 @@ jobs:
         lua -v || true
     -
       name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v7
       with:
         submodules: 'true'
     -
@@ -67,16 +100,10 @@ jobs:
       run: |
         sh ./covgen.sh
     -
-      name: Upload lua coverage to Codecov
-      uses: codecov/codecov-action@v3
+      name: Upload coverage files to Codecov
+      uses: codecov/codecov-action@v7
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./luacov.report.out
-        flags: unittests
-    -
-      name: Upload c coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: ./coverage/lcov.info
+        use_oidc: true
+        disable_search: true
+        files: ./luacov.report.out,./coverage/lcov.info
         flags: unittests
