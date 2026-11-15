@@ -55,3 +55,58 @@ local function errno_test()
 end
 
 errno_test()
+
+local function errno_is_test()
+    -- test that compare numeric codes, symbolic names, and error types
+    assert.is_true(errno.is(errno.ENOENT.code, errno.ENOENT.code))
+    assert.is_true(errno.is(errno.ENOENT.code, 'ENOENT'))
+    assert.is_true(errno.is(errno.ENOENT.code, errno.ENOENT))
+    assert.is_false(errno.is(errno.ENOENT.code, errno.EACCES.code))
+    assert.is_false(errno.is(errno.ENOENT.code, 'EACCES'))
+    assert.is_false(errno.is(errno.ENOENT.code, errno.EACCES))
+
+    -- test that aliases compare by code rather than object identity
+    assert.is_true(errno.is(errno.EAGAIN.code, 'EWOULDBLOCK'))
+    assert.is_true(errno.is(errno.EAGAIN.code, errno.EWOULDBLOCK))
+
+    -- test that only error types owned by errno are accepted
+    assert.is_false(errno.is(errno.ENOENT.code, {
+        code = errno.ENOENT.code,
+    }))
+    assert.is_false(errno.is(errno.ENOENT.code, {
+        name = errno.ENOENT.name,
+        code = errno.ENOENT.code,
+        message = errno.ENOENT.message,
+    }))
+    assert.is_false(errno.is(errno.ENOENT.code, setmetatable({}, {
+        __index = errno.ENOENT,
+    })))
+    local eai = require('errno.eai')
+    assert.is_false(errno.is(eai.EAI_AGAIN.code, eai.EAI_AGAIN))
+
+    -- test that numeric comparisons do not require a defined errno
+    assert.is_true(errno.is(0, 0))
+    assert.is_false(errno.is(0, 'ENOENT'))
+    assert.is_false(errno.is(errno.ENOENT.code, 'UNKNOWN_ERRNO'))
+    assert.is_false(errno.is(errno.ENOENT.code, tostring(errno.ENOENT.code)))
+
+    -- test that absent or unsupported values do not match
+    assert.is_false(errno.is(nil, 'ENOENT'))
+    assert.is_false(errno.is('2', 'ENOENT'))
+    assert.is_false(errno.is(nil, nil))
+    assert.is_false(errno.is(errno.ENOENT.code, nil))
+    assert.is_false(errno.is(errno.ENOENT.code, false))
+    assert.is_false(errno.is(errno.ENOENT.code, {}))
+
+    -- test that compare an errno returned by a read-only system call
+    -- errno_test.lua is a regular file, so a child path cannot be opened.
+    local file, err, errnum = io.open('test/errno_test.lua/missing', 'r')
+    assert.is_nil(file)
+    assert.is_string(err)
+    assert.equal(errnum, errno.ENOTDIR.code)
+    assert.is_true(errno.is(errnum, errno.ENOTDIR.code))
+    assert.is_true(errno.is(errnum, 'ENOTDIR'))
+    assert.is_true(errno.is(errnum, errno.ENOTDIR))
+end
+
+errno_is_test()
