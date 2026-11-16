@@ -23,6 +23,7 @@
 --
 local format = string.format
 local tostring = tostring
+local type = type
 -- luacheck: ignore new_error_type
 local new_error_type = require('error').type.new
 local new_error_mesage = require('error').message.new
@@ -50,14 +51,41 @@ local function new(num, msg, op, err, traceback)
     return t:new(msg, err, 2, traceback)
 end
 
+--- map errno to error types for quick lookup
+local ERRNO2TYPES = {}
+
+--- is
+--- @param errnum number
+--- @param expect string|number|table errno name, code, or error type
+--- @return boolean ok
+local function is(errnum, expect)
+    if type(errnum) ~= 'number' then
+        return false
+    end
+
+    -- determine the type of the expected value
+    local t = type(expect)
+    if t == 'string' then
+        expect = _M[expect]
+        return expect ~= nil and errnum == expect.code
+    elseif t == 'number' then
+        return errnum == expect
+    elseif t == 'table' then
+        return ERRNO2TYPES[expect] == true and errnum == expect.code
+    end
+    return false
+end
+
 local EXPORTS = {}
 for k, v in pairs(_M) do
     EXPORTS[k] = v
+    ERRNO2TYPES[v] = true
 end
 
 return setmetatable(EXPORTS, {
     __index = {
         new = new,
+        is = is,
     },
 })
 

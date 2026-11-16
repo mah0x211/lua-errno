@@ -35,6 +35,32 @@ print(errno.ENOENT.message) -- No such file or directory
 each error type object is created by [lua-error](https://github.com/mah0x211/lua-error)
 and exposes the standard `ErrType:new(...)` constructor.
 
+### `ok = errno.is(errnum, expect)`
+
+returns a boolean indicating whether a numeric errno matches `expect`.
+
+- `errnum`: numeric errno returned by a Lua system call such as `io.open`.
+- `expect`: numeric code, symbolic name such as `"ENOENT"`, or an error type
+  object such as `errno.ENOENT`.
+
+comparison uses numeric codes, so symbolic aliases with the same code also
+match. table arguments must be error type objects owned by this `errno` module;
+a table with matching fields is not accepted. unknown names, unowned tables,
+and unsupported argument types return `false`.
+
+```lua
+local errno = require('errno')
+
+local file, err, errnum = io.open('/path/to/file', 'r')
+if not file then
+    print(errno.is(errnum, errno.ENOENT.code))
+    print(errno.is(errnum, 'ENOENT'))
+    print(errno.is(errnum, errno.ENOENT))
+else
+    file:close()
+end
+```
+
 ### `err = errno.new(errnum [, msg [, op [, wrap [, traceback]]]])`
 
 create an error object from an errno name or numeric errno code.
@@ -72,7 +98,7 @@ print(err.op) -- example
 
 ### `local eai = require('errno.eai')`
 
-returns the `getaddrinfo(3)` error table. it has the same interface as
+returns the `getaddrinfo(3)` error table. it has the same mapping interface as
 `require('errno')`: symbolic names and numeric codes both map to the same error
 type object, and `eai.new(...)` has the same signature as `errno.new(...)`.
 
