@@ -35,6 +35,21 @@ print(errno.ENOENT.message) -- No such file or directory
 each error type object is created by [lua-error](https://github.com/mah0x211/lua-error)
 and exposes the standard `ErrType:new(...)` constructor.
 
+### `errt = errno.last()`
+
+returns the error type object matching the current C `errno`, obtained through
+`errno.get`. returns `nil` when the value has no defined error type, including
+`0`. aliases use the same mapping as `errno[errnum]`.
+
+```lua
+local errno = require('errno')
+local set = require('errno.set')
+
+set(errno.ENOENT.code)
+local errt = errno.last()
+print(errt == errno.ENOENT) -- true
+```
+
 ### `ok = errno.is(errnum, expect)`
 
 returns a boolean indicating whether a numeric errno matches `expect`.
