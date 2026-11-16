@@ -24,6 +24,7 @@
 local format = string.format
 local tostring = tostring
 local type = type
+local get = require('errno.get')
 -- luacheck: ignore new_error_type
 local new_error_type = require('error').type.new
 local new_error_mesage = require('error').message.new
@@ -51,8 +52,14 @@ local function new(num, msg, op, err, traceback)
     return t:new(msg, err, 2, traceback)
 end
 
---- map errno to error types for quick lookup
-local ERRNO2TYPES = {}
+--- get last errno type
+--- @return table? errt errno type for the current errno
+local function last()
+    return _M[get()]
+end
+
+--- map of error types for quick lookup
+local ERRNOTYPES = {}
 
 --- is
 --- @param errnum number
@@ -71,7 +78,7 @@ local function is(errnum, expect)
     elseif t == 'number' then
         return errnum == expect
     elseif t == 'table' then
-        return ERRNO2TYPES[expect] == true and errnum == expect.code
+        return ERRNOTYPES[expect] == true and errnum == expect.code
     end
     return false
 end
@@ -79,11 +86,12 @@ end
 local EXPORTS = {}
 for k, v in pairs(_M) do
     EXPORTS[k] = v
-    ERRNO2TYPES[v] = true
+    ERRNOTYPES[v] = true
 end
 
 return setmetatable(EXPORTS, {
     __index = {
+        last = last,
         new = new,
         is = is,
     },

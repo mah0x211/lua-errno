@@ -12,3 +12,32 @@ local function set_get_test()
 end
 
 set_get_test()
+
+local function last_test()
+    local saved = get()
+
+    -- test that return the existing error type for the current errno
+    set(errno.ENOENT.code)
+    local enoent = errno.last()
+    set(errno.EACCES.code)
+    local eacces = errno.last()
+
+    -- test that aliases use the existing numeric mapping
+    set(errno.EWOULDBLOCK.code)
+    local alias = errno.last()
+
+    -- test that zero and undefined errno values return nil
+    set(0)
+    local zero = errno.last()
+    set(-1)
+    local unknown = errno.last()
+    set(saved)
+
+    assert.equal(enoent, errno.ENOENT)
+    assert.equal(eacces, errno.EACCES)
+    assert.equal(alias, errno[errno.EWOULDBLOCK.code])
+    assert.is_nil(zero)
+    assert.is_nil(unknown)
+end
+
+last_test()
